@@ -12,6 +12,9 @@ const TARGET_SSID: &str = "Leons iPhone";
 
 #[tokio::main]
 async fn main() {
+    // Spawn separate tokio async function, to run both of these functions at the same time
+    tokio::spawn(check_for_ctrl_c());
+
     // Start the monitoring loop
     // Returns Ok if no error, Err if error occurred
     loop {
@@ -32,13 +35,19 @@ async fn main() {
         }
 
         // Wait for a specified interval before scanning again
-        time::sleep(Duration::from_secs(1)).await; // Adjust the interval as needed
+        time::sleep(Duration::from_secs(5)).await; // Adjust the interval as needed
         println!("Sleeping");
     }
 }
 
-// TODO: Check permissions when tryig to write files
-// TODO: add kill signal check, when ctrl + c is pressed to exit the app
+async fn check_for_ctrl_c() {
+    // Spawn tokio signal to listen and wait for ctrl + c signal
+    tokio::signal::ctrl_c()
+        .await
+        .expect("Failed to listed for ctrl + c");
+    println!("Exiting host checker");
+    std::process::exit(0);
+}
 
 fn on_target_ssid_connected() {
     // Since we are connected to target wifi ssid, we need to uncomment local ip addresses
