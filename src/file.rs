@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, io, process};
 
 pub fn has_local_ips(path: &str, ip_addr: &str) -> bool {
     for row in read(path) {
@@ -17,10 +17,10 @@ pub fn read(path: &str) -> Vec<String> {
     txt.lines().map(|s| s.to_string()).collect()
 }
 
-pub fn write(path: &str, contents: Vec<String>) {
-    if let Err(e) = fs::write(path, contents.join("\n")) {
-        eprint!("Failed to write to the file {}", e);
-    }
+pub fn write(path: &str, contents: Vec<String>) -> Result<(), io::Error> {
+    // Notice how end of the next line doesn't have ;
+    // thats because I am returning it as a result void, or error (for error handling)
+    fs::write(path, contents.join("\n"))
 }
 
 pub fn comment_ips(path: &str, ip_addr: &str) {
@@ -57,6 +57,13 @@ pub fn uncomment_ips(path: &str, ip_addr: &str) {
     }
 
     // Write hosts file with new data
-    write(path, hosts);
-    println!("Removed comments from ip addresses");
+    // Error handle writing
+    // TODO: Move this to the write function
+    match write(path, hosts) {
+        Ok(_) => println!("Removed comments from ip addresses"),
+        Err(e) => {
+            eprintln!("Error while uncommenting hosts file: {}", e);
+            process::exit(1)
+        }
+    }
 }
