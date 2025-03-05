@@ -1,6 +1,9 @@
-use std::{fs, io, process};
+use std::{fs, process};
 
 pub fn has_local_ips(path: &str, ip_addr: &str) -> bool {
+    // We get array of Strings from read function, so we iter trhough it and process each row
+    // when processing row we need to check if it contains specified ip address, and if the ip
+    // address is uncommented. If it's uncommented that means we have it. So we return true
     for row in read(path) {
         // If contains ip address and it isn't commented out
         if row.contains(ip_addr) && !row.contains("#") {
@@ -8,19 +11,34 @@ pub fn has_local_ips(path: &str, ip_addr: &str) -> bool {
         }
     }
 
+    // Return false if didn't find uncommented ip address
+    // The return value is last line without ";" character
     false
 }
 
 pub fn read(path: &str) -> Vec<String> {
-    let txt: String = fs::read_to_string(path).unwrap();
-    // Convert unmutable barrowed &str to actuall mutable strings that arent barrowed
-    txt.lines().map(|s| s.to_string()).collect()
+    // In this code, we need to handle Ok(), and Err(), unlike in write
+    // That's why I am using match to check for errors
+    match fs::read_to_string(path) {
+        // If we get lines we get an array of &str
+        // So we map through it, and convert it to mutable String, and then collect iterable values
+        // with .collect()
+        Ok(contents) => contents.lines().map(|line| line.to_string()).collect(),
+        Err(e) => {
+            // Print out error if happened, and exit with 1 code
+            eprintln!("Error while reading {} file: {}", path, e);
+            process::exit(1);
+        }
+    }
 }
 
-pub fn write(path: &str, contents: Vec<String>) -> Result<(), io::Error> {
-    // Notice how end of the next line doesn't have ;
-    // thats because I am returning it as a result void, or error (for error handling)
-    fs::write(path, contents.join("\n"))
+pub fn write(path: &str, contents: Vec<String>) {
+    // We could use match Ok(_), Err(e) statement
+    // But since we need to check only for error, we will use this method
+    if let Err(e) = fs::write(path, contents.join("\n")) {
+        eprintln!("Error while writing {} file: {}", path, e);
+        process::exit(1);
+    }
 }
 
 pub fn comment_ips(path: &str, ip_addr: &str) {
@@ -57,13 +75,5 @@ pub fn uncomment_ips(path: &str, ip_addr: &str) {
     }
 
     // Write hosts file with new data
-    // Error handle writing
-    // TODO: Move this to the write function
-    match write(path, hosts) {
-        Ok(_) => println!("Removed comments from ip addresses"),
-        Err(e) => {
-            eprintln!("Error while uncommenting hosts file: {}", e);
-            process::exit(1)
-        }
-    }
+    write(path, hosts);
 }
