@@ -9,6 +9,7 @@ mod file;
 const HOSTS_PATH: &str = "hosts";
 const IP_ADDRESS: &str = "192.168.8.109";
 const TARGET_SSID: &str = "Leons iPhone";
+const SLEEP_TIME: u64 = 5; // How often to check for wifi connection
 
 #[tokio::main]
 async fn main() {
@@ -35,7 +36,7 @@ async fn main() {
         }
 
         // Wait for a specified interval before scanning again
-        time::sleep(Duration::from_secs(5)).await; // Adjust the interval as needed
+        time::sleep(Duration::from_secs(SLEEP_TIME)).await;
         println!("Sleeping");
     }
 }

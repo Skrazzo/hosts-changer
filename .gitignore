@@ -1,2 +1,4 @@
 /target
 hosts
+.DS_Store
+host-checker
